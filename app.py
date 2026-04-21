@@ -163,17 +163,48 @@ def search_query(query, top_k=5):
             preview_html = get_snippet(documents[i], query_clean)
             
             search_param = urllib.parse.quote(query.strip())
+            doc_name_encoded = urllib.parse.quote(document_names[i])
             
             results.append({
                 "Rank": f"#{rank}",
                 "Document": f"<strong style='color:#fff;'>[{document_names[i]}]</strong><br/>{preview_html}",
                 "Score": f"{scores[i]:.4f}",
-                "Action": f"<a href='/pdf/{document_names[i]}#search={search_param}' target='_blank' style='display:inline-block; margin-top:4px; padding:4px 10px; background:var(--surface-light); border:1px solid var(--primary); border-radius:6px; color:var(--primary); text-decoration:none; font-size:0.85rem; transition:0.2s;' onmouseover='this.style.background=\"var(--primary)\"; this.style.color=\"#fff\";' onmouseout='this.style.background=\"var(--surface-light)\"; this.style.color=\"var(--primary)\";'>📄 View PDF</a>"
+                "Action": f"<a href='/pdf/{doc_name_encoded}?q={search_param}' target='_blank' style='display:inline-block; margin-top:4px; padding:4px 10px; background:var(--surface-light); border:1px solid var(--primary); border-radius:6px; color:var(--primary); text-decoration:none; font-size:0.85rem; transition:0.2s;' onmouseover='this.style.background=\"var(--primary)\"; this.style.color=\"#fff\";' onmouseout='this.style.background=\"var(--surface-light)\"; this.style.color=\"var(--primary)\";'>📄 View PDF</a>"
             })
     return pd.DataFrame(results)
 
 @app.route('/pdf/<filename>')
 def serve_pdf(filename):
+    query = request.args.get('q', '')
+    filepath = os.path.join(dataset_dir, filename)
+    
+    if query:
+        try:
+            import fitz  # PyMuPDF
+            import io
+            from flask import send_file
+            
+            doc = fitz.open(filepath)
+            query_terms = [t for t in query.split() if t.strip()]
+            
+            # Cari dan highlight tiap kata di semua halaman PDF
+            for page in doc:
+                for term in query_terms:
+                    # search_for secara otomatis case-insensitive
+                    text_instances = page.search_for(term)
+                    for inst in text_instances:
+                        annot = page.add_highlight_annot(inst)
+                        annot.update()
+                        
+            pdf_bytes = doc.write()
+            return send_file(io.BytesIO(pdf_bytes), mimetype='application/pdf')
+            
+        except ImportError:
+            print("PyMuPDF tidak terinstall, mengirimkan PDF biasa sebagai fallback.")
+        except Exception as e:
+            print(f"Gagal melakukan highlight pada PDF: {e}")
+
+    # Fallback ke PDF biasa jika tidak ada query atau PyMuPDF error
     return send_from_directory(dataset_dir, filename)
 
 @app.route('/', methods=['GET', 'POST'])
