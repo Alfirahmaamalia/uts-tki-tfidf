@@ -2,26 +2,56 @@ import numpy as np
 import pandas as pd
 import re
 import math
+import os
+import urllib.parse
 from collections import Counter
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_from_directory
+from PyPDF2 import PdfReader
 
 app = Flask(__name__)
 
 # DATASET
-documents = [
-    "Artificial intelligence is transforming technology",
-    "Machine learning is a subset of artificial intelligence",
-    "Deep learning improves AI performance",
-    "Data science involves statistics and machine learning",
-    "Big data analytics is important in modern technology",
-    "AI is used in healthcare and finance",
-    "Neural networks are used in deep learning",
-    "Technology is evolving rapidly with AI",
-    "Machine learning models require data",
-    "Artificial intelligence and data science are related"
-]
+dataset_dir = 'dataset_pdf'
+if not os.path.exists(dataset_dir):
+    os.makedirs(dataset_dir)
+
+documents = []
+document_names = []
+
+for filename in os.listdir(dataset_dir):
+    if filename.endswith('.pdf'):
+        filepath = os.path.join(dataset_dir, filename)
+        try:
+            reader = PdfReader(filepath)
+            text = ""
+            for page in reader.pages:
+                extracted = page.extract_text()
+                if extracted:
+                    text += extracted + " "
+            if text.strip():
+                documents.append(text.strip())
+                document_names.append(filename)
+        except Exception as e:
+            print(f"Error reading {filename}: {e}")
+
+# Fallback dataset jika tidak ada file PDF
+if not documents:
+    print("Tidak ditemukan file PDF di folder 'dataset_pdf'. Menggunakan dataset default.")
+    documents = [
+        "Artificial intelligence is transforming technology",
+        "Machine learning is a subset of artificial intelligence",
+        "Deep learning improves AI performance",
+        "Data science involves statistics and machine learning",
+        "Big data analytics is important in modern technology",
+        "AI is used in healthcare and finance",
+        "Neural networks are used in deep learning",
+        "Technology is evolving rapidly with AI",
+        "Machine learning models require data",
+        "Artificial intelligence and data science are related"
+    ]
+    document_names = [f"Doc_{i+1}" for i in range(len(documents))]
 
 stopwords = {"is", "a", "and", "in", "of", "the", "are", "with"}
 
@@ -82,6 +112,40 @@ idf_html = pd.DataFrame(list(idf.items()), columns=['Word', 'IDF']).round(3).to_
 tfidf_html = format_df_to_html(tfidf_df)
 tfidf_lib_html = format_df_to_html(tfidf_df_lib)
 
+def get_snippet(text, query, context_range=60):
+    query_clean = preprocess(query)
+    terms = [term for term in set(query_clean.split()) if term]
+    
+    if not terms:
+        return text[:150] + "..."
+    
+    text_lower = text.lower()
+    first_idx = -1
+    for term in terms:
+        idx = text_lower.find(term)
+        if idx != -1:
+            if first_idx == -1 or idx < first_idx:
+                first_idx = idx
+    
+    if first_idx == -1:
+        return text[:150] + "..."
+        
+    start = max(0, first_idx - context_range)
+    end = min(len(text), first_idx + context_range + len(query))
+    
+    snippet = text[start:end]
+    if start > 0:
+        snippet = "..." + snippet
+    if end < len(text):
+        snippet = snippet + "..."
+        
+    # Bold the terms
+    for term in terms:
+        pattern = re.compile(f"({re.escape(term)})", re.IGNORECASE)
+        snippet = pattern.sub(r"<b style='color: #58a6ff; font-weight: 800;'>\1</b>", snippet)
+        
+    return snippet
+
 def search_query(query, top_k=5):
     query_clean = preprocess(query)
     if not query_clean.strip():
@@ -96,12 +160,21 @@ def search_query(query, top_k=5):
     results = []
     for rank, i in enumerate(ranked_indices[:top_k], start=1):
         if scores[i] > 0: # Only return somewhat matching
+            preview_html = get_snippet(documents[i], query_clean)
+            
+            search_param = urllib.parse.quote(query.strip())
+            
             results.append({
                 "Rank": f"#{rank}",
-                "Document": documents[i],
-                "Score": f"{scores[i]:.4f}"
+                "Document": f"<strong style='color:#fff;'>[{document_names[i]}]</strong><br/>{preview_html}",
+                "Score": f"{scores[i]:.4f}",
+                "Action": f"<a href='/pdf/{document_names[i]}#search={search_param}' target='_blank' style='display:inline-block; margin-top:4px; padding:4px 10px; background:var(--surface-light); border:1px solid var(--primary); border-radius:6px; color:var(--primary); text-decoration:none; font-size:0.85rem; transition:0.2s;' onmouseover='this.style.background=\"var(--primary)\"; this.style.color=\"#fff\";' onmouseout='this.style.background=\"var(--surface-light)\"; this.style.color=\"var(--primary)\";'>📄 View PDF</a>"
             })
     return pd.DataFrame(results)
+
+@app.route('/pdf/<filename>')
+def serve_pdf(filename):
+    return send_from_directory(dataset_dir, filename)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -113,13 +186,19 @@ def index():
         if query:
             result_df = search_query(query)
             if result_df is not None and not result_df.empty:
-                search_results = result_df.to_html(classes='table-display search-results-table', border=0, index=False, justify='left')
+                search_results = result_df.to_html(classes='table-display search-results-table', border=0, index=False, justify='left', escape=False)
             else:
                 search_results = "<div class='no-results'>No relevant documents found for your query.</div>"
 
+    # Format document preview for display in the UI
+    documents_display = []
+    for name, doc in zip(document_names, documents):
+        preview = doc[:150] + "..." if len(doc) > 150 else doc
+        documents_display.append({"name": name, "preview": f"[{name}] {preview}"})
+
     return render_template(
         'index.html',
-        documents=enumerate(documents, 1),
+        documents=enumerate(documents_display, 1),
         tf_html=tf_html,
         idf_html=idf_html,
         tfidf_html=tfidf_html,

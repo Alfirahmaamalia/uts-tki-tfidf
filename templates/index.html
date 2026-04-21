@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -48,6 +49,7 @@
             opacity: 0.5;
             animation: float 20s infinite ease-in-out alternate;
         }
+
         .blob-1 {
             width: 400px;
             height: 400px;
@@ -55,6 +57,7 @@
             top: -100px;
             left: -100px;
         }
+
         .blob-2 {
             width: 300px;
             height: 300px;
@@ -65,8 +68,13 @@
         }
 
         @keyframes float {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(50px, 50px); }
+            0% {
+                transform: translate(0, 0);
+            }
+
+            100% {
+                transform: translate(50px, 50px);
+            }
         }
 
         header {
@@ -98,7 +106,7 @@
             display: flex;
             gap: 15px;
         }
-        
+
         .author-badge {
             background: var(--surface-light);
             padding: 5px 12px;
@@ -131,6 +139,7 @@
             flex-direction: column;
             gap: 20px;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            min-width: 0;
         }
 
         .panel:hover {
@@ -148,7 +157,7 @@
             align-items: center;
             gap: 10px;
         }
-        
+
         .panel h2::before {
             content: '';
             display: block;
@@ -182,12 +191,12 @@
             font-family: inherit;
             outline: none;
             transition: all 0.3s ease;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         input[type="text"]:focus {
             border-color: var(--primary);
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 0 0 0 3px var(--primary-glow);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 0 3px var(--primary-glow);
         }
 
         button {
@@ -263,8 +272,15 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* Scrollbar */
@@ -272,13 +288,16 @@
             width: 8px;
             height: 8px;
         }
+
         ::-webkit-scrollbar-track {
             background: var(--surface-color);
         }
+
         ::-webkit-scrollbar-thumb {
             background: var(--border);
             border-radius: 4px;
         }
+
         ::-webkit-scrollbar-thumb:hover {
             background: var(--secondary);
         }
@@ -306,6 +325,8 @@
             padding: 12px 15px;
             border-bottom: 1px solid rgba(48, 54, 61, 0.5);
             color: var(--text-main);
+            vertical-align: top;
+            overflow-wrap: anywhere;
         }
 
         .table-display tbody tr {
@@ -313,17 +334,17 @@
         }
 
         .table-display tbody tr:hover {
-            background: rgba(255,255,255,0.03);
+            background: rgba(255, 255, 255, 0.03);
         }
 
         /* Specific Search Results Table styling */
         .search-results-table {
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             border: 1px solid var(--border);
         }
-        
+
         .search-results-table tr {
             animation: slideIn 0.3s ease forwards;
             opacity: 0;
@@ -331,31 +352,56 @@
         }
 
         /* stagger animation for rows */
-        .search-results-table tbody tr:nth-child(1) { animation-delay: 0.1s; }
-        .search-results-table tbody tr:nth-child(2) { animation-delay: 0.2s; }
-        .search-results-table tbody tr:nth-child(3) { animation-delay: 0.3s; }
-        .search-results-table tbody tr:nth-child(4) { animation-delay: 0.4s; }
-        .search-results-table tbody tr:nth-child(5) { animation-delay: 0.5s; }
+        .search-results-table tbody tr:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .search-results-table tbody tr:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .search-results-table tbody tr:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .search-results-table tbody tr:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+
+        .search-results-table tbody tr:nth-child(5) {
+            animation-delay: 0.5s;
+        }
 
         @keyframes slideIn {
-            to { opacity: 1; transform: translateX(0); }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
 
         .doc-list {
             list-style: none;
         }
+
         .doc-list li {
             padding: 12px;
             border-bottom: 1px solid var(--border);
             display: flex;
             gap: 15px;
         }
+
         .doc-list li:last-child {
             border-bottom: none;
         }
+
         .doc-num {
             color: var(--primary);
             font-weight: 800;
+        }
+
+        .doc-text {
+            word-wrap: break-word;
+            overflow-wrap: anywhere;
         }
 
         .no-results {
@@ -366,13 +412,15 @@
             border-radius: 8px;
             border: 1px dashed var(--border);
         }
-        
+
         .results-container {
             margin-top: 20px;
+            overflow-x: auto;
+            width: 100%;
         }
-
     </style>
 </head>
+
 <body>
     <div class="glass-blob blob-1"></div>
     <div class="glass-blob blob-2"></div>
@@ -400,7 +448,19 @@
             <div id="tab-docs" class="tab-content active">
                 <ul class="doc-list">
                     {% for i, doc in documents %}
-                    <li><span class="doc-num">#{{ i }}</span> <span class="doc-text">{{ doc }}</span></li>
+                    <li>
+                        <span class="doc-num">#{{ i }}</span>
+                        <div style="flex-grow: 1;">
+                            <span class="doc-text">{{ doc.preview }}</span>
+                            <div style="margin-top: 10px;">
+                                <a href="/pdf/{{ doc.name }}" target="_blank"
+                                    style="display:inline-block; padding:5px 12px; background:var(--surface-light); border:1px solid var(--primary); border-radius:6px; color:var(--primary); text-decoration:none; font-size:0.85rem; font-weight:600; transition:all 0.2s;"
+                                    onmouseover="this.style.background='var(--primary)'; this.style.color='#fff';"
+                                    onmouseout="this.style.background='var(--surface-light)'; this.style.color='var(--primary)';">📄
+                                    View PDF Document</a>
+                            </div>
+                        </div>
+                    </li>
                     {% endfor %}
                 </ul>
             </div>
@@ -423,21 +483,22 @@
             <h2>Information Retrieval</h2>
             <div class="search-container">
                 <form method="POST" action="/" class="search-input-wrapper">
-                    <input type="text" name="query" placeholder="Enter search query..." value="{{ query }}" required autocomplete="off">
+                    <input type="text" name="query" placeholder="Enter search query..." value="{{ query }}" required
+                        autocomplete="off">
                     <button type="submit">Search</button>
                 </form>
             </div>
 
             <div class="results-container">
                 {% if search_results %}
-                    <h3 style="margin-bottom: 15px; font-size: 1.1rem; color: #fff;">Results for "{{ query }}"</h3>
-                    {{ search_results|safe }}
+                <h3 style="margin-bottom: 15px; font-size: 1.1rem; color: #fff;">Results for "{{ query }}"</h3>
+                {{ search_results|safe }}
                 {% elif query %}
-                    <!-- Show nothing, handled by search_results being empty string logic in app.py if needed, but we pass "<div class='no-results'>..." -->
+                <!-- Show nothing, handled by search_results being empty string logic in app.py if needed, but we pass "<div class='no-results'>..." -->
                 {% else %}
-                    <div class="no-results">
-                        Enter a query above to calculate cosine similarity and retrieve relevant documents.
-                    </div>
+                <div class="no-results">
+                    Enter a query above to calculate cosine similarity and retrieve relevant documents.
+                </div>
                 {% endif %}
             </div>
         </section>
@@ -459,4 +520,5 @@
         }
     </script>
 </body>
+
 </html>
